@@ -62,7 +62,7 @@
             return;
         }
 
-        fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${API_KEY}`)
+       fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${API_KEY}`)
         .then(response => response.json())
         .then(data => {
             if (data['Error Message']) {
