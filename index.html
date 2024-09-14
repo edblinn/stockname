@@ -55,34 +55,41 @@
     function fetchStockData() {
         const symbol = document.getElementById('stockSymbol').value;
         const errorDiv = document.getElementById('error');
-        errorDiv.innerHTML = ''; // Clear any previous errors
+        const infoDiv = document.getElementById('info');
+        errorDiv.innerHTML = ''; // Clear previous errors
+        infoDiv.innerHTML = ''; // Clear previous data
 
         if (!symbol) {
             errorDiv.innerHTML = 'Please enter a valid stock symbol.';
             return;
         }
 
-       fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${API_KEY}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data['Error Message']) {
-                throw new Error('Invalid stock symbol or API error.');
-            }
-            displayStockInfo(data);
-            renderCharts(data);
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-            errorDiv.innerHTML = 'Error fetching data. Please check the stock symbol or API key.';
-        });
+        const apiUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${API_KEY}`;
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data['Error Message']) {
+                    throw new Error('Invalid stock symbol or API error.');
+                }
+                if (!data['Time Series (Daily)']) {
+                    throw new Error('No data found for this symbol.');
+                }
+                displayStockInfo(data);
+                renderCharts(data);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                errorDiv.innerHTML = 'Error fetching data. Please check the stock symbol or API key.';
+            });
     }
 
     function displayStockInfo(data) {
-        const infoDiv = document.getElementById('info');
         const timeSeries = data['Time Series (Daily)'];
         const latestDay = Object.keys(timeSeries)[0];
         const latestData = timeSeries[latestDay];
 
+        const infoDiv = document.getElementById('info');
         infoDiv.innerHTML = `
             <h3>Stock: ${data['Meta Data']['2. Symbol']}</h3>
             <p><strong>Date:</strong> ${latestDay}</p>
@@ -96,7 +103,7 @@
 
     function renderCharts(data) {
         const timeSeries = data['Time Series (Daily)'];
-        const dates = Object.keys(timeSeries).slice(0, 30).reverse();
+        const dates = Object.keys(timeSeries).slice(0, 30).reverse();  // Last 30 days
         const prices = dates.map(date => parseFloat(timeSeries[date]['4. close']));
         const volumes = dates.map(date => parseInt(timeSeries[date]['6. volume']));
 
